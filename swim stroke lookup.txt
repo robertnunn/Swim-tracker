@@ -1,0 +1,5 @@
+﻿1	front crawl/freestyle
+2	breast
+3	back
+4	butterfly
+5	side
