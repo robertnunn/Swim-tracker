@@ -3,52 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <title>JS Swim Timer Test</title>
-	<!--<script
-			  src="https://code.jquery.com/jquery-3.3.1.min.js"
-			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-			  crossorigin="anonymous"></script>-->
 	</head>
 <body onload="setup()">
 <center>
-<select id="routine" onchange="routine_change(workout, times)">
+<select id="routine" onchange="routine_change(workout)">
 	<option value="none">Select Routine</option>
 	<option value="1600yards">1600 yards + WU, CD</option>
 	<option value="old1k">Old 1k yards</option>
+	<option value="sprints">12x50yd sprints</option>
 </select>
 
-<table width=100% border=1 id="timer" onclick="tapUpdate(times)">
-	<tr><td id="counter" style="font-size:200px; text-align:center" colspan=2>Please select a routine</td></tr>
+<table width=100% border=1 id="timer" onmousedown="tapUpdate(times)">
+	<tr><td id="counter" style="font-size:150px; text-align:center" colspan=2>Please select a routine</td></tr>
 	<tr><td id="padding" height="300px" colspan=2>&nbsp;</td></tr>
 </table>
 
 </center></body>
 <script src="swim.js"></script>
 <script>
-	//define color "constants", they can be overridden by the workout file
+	//define colors, they can be overridden by the workout file (override needs implementation)
 	var STROKE_COLOR_FREE_LIGHT = "#ffb3b3";
 	var STROKE_COLOR_FREE_DARK = "#ff0000";
 	var STROKE_COLOR_BREAST_LIGHT = "#b3ffb3";
 	var STROKE_COLOR_BREAST_DARK = "#00ff00";
 	var STROKE_COLOR_BACK_LIGHT = "#b3b3ff";
 	var STROKE_COLOR_BACK_DARK = "#0000ff";
+	var STROKE_COLOR_REST = "#999999";
 	var STROKE_COLOR_DONE = "#ffffff";		
 
 	var times = [];
-	var sets;
-	var laps;
-	var workout = {"warmup": null, "cooldown": null, "workout": null, "file": null};
+	var STOP_TIMER = false;
+	var workout = {"title": null, "warmup": null, "cooldown": null, "workout": null};
+	var routine_labels;
 	var timer_table = document.getElementById("timer");
+	var reset_table = timer_table.outerHTML;
 
-	/*workout = $.getJSON("old1k.json", function(json){
-		console.log("jQuery: ");
-		console.log(json);
-		return json.responseJSON;
-	});*/
-
-	
-	//console.log(workout.length);
-	//workout = JSON.parse(workout);
-	//console.log(workout);
-	//console.log(workout["workout"]);
+	var routines = {
+		"old1k": {
+			"title": "Old 1k yards",
+			"warmup":null,
+			"cooldown":null,
+			"workout":[
+				[3, [1,1,2,2,3,3]],
+				[1, [1,1]]
+				]
+		},
+		"1600yards": {
+			"title": "1600 yards + WU, CD",
+			"warmup": [[1, [1,1,2,2,3,3]]],
+			"cooldown": [[1, [1,1,2,2,3,3]]],
+			"workout": [
+				[1, [1,1,1,1,1,1,1,1]],
+				[1, [2,2,2,2,3,3,3,3]],
+				[1, [2,2,3,3,2,2,3,3]],
+				[1, [1,2,3,1,2,3,1,2]]
+				]
+		},
+		"sprints": {
+			"title": "Sprints",
+			"warmup": [[1, [1,1,2,2,3,3]]],
+			"cooldown": [[1, [1,1,2,2,3,3]]],
+			"workout": [
+				[2, [1,0,1,0,2,0,2,0,3,0,3]]
+			]
+		}
+	}
 </script>
 </html>

@@ -1,5 +1,10 @@
-﻿1	front crawl/freestyle
+﻿-1	random choice (excludes rest)
+0	rest
+1	front crawl/freestyle
 2	breast
 3	back
 4	butterfly
 5	side
+
+workouts are defined by an array of arrays of arrays, with each element of the top level array being:
+[num times to repeat set, [lap list]]

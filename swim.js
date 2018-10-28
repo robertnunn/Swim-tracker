@@ -1,62 +1,20 @@
 function tapUpdate(times){
     //get relevant objects from page
     var cnt = document.getElementById("counter"); //grabs lap counter cell from results table
-    var current_lap = cnt.innerHTML //get the text in the lap counter cell
-    var routine = document.getElementById("routine").value; //get the currently selected routine
-    var txt = ""; //txt is the new lap counter display string
-    var color; //color the background will be changed to
+    // var current_lap = cnt.innerHTML //get the text in the lap counter cell
+    // var routine = document.getElementById("routine").value; //get the currently selected routine
+    var next_lap;
     var timer_table = document.getElementById("timer");
-    
-    times = add_new_time(timer_table, times);
-    switch(routine){ //switch statement updates the lap counter based on selected routine
-        case "none": //pick a routine, ya git!
-            txt = "Select a routine!";
-            break;
-        case "old1k":
-            if(current_lap == "Done!"){ //check if we're finished and always display "Done!" if we are
-                txt = "Done!";
-                color = STROKE_COLOR_DONE;
-                break; //exit the switch if we're done and don't do any math; we don't need it!
-            }
-            //slice up the text from the lap counter and extract the set number and lap number
-            var set = Number(current_lap.slice(0,1));
-            var lap = Number(current_lap.slice(2,3));
-            var stroke = "Free"; //default stroke
-            
-            
-            if(lap>5){ //6 laps per set in this routine
-                set++;
-                lap = 1;
-            }else{
-                lap++;
-            }
-            
-            if(lap < 3){ //2 free, 2 breast, 2 back per set, in that order
-                stroke = "Free";
-            }else if(lap < 5){
-                stroke = "Breast";
-            }else{
-                stroke = "Back";
-            }
-            
-            color = lap_color(lap, stroke); //pick background color
-            
-            if(set==4 && lap>2){ //if we're done (20 laps), say so
-                txt = "Done! " + format_time(times[times.length-1] - times[0])
-                color = STROKE_COLOR_DONE;
-                document.getElementById("timer").setAttribute("onclick", "");
-            }else{ //if we're still swimming, update lap counter
-                txt = set + "-" + lap + " " + stroke;
-            }
-            
-            break;
-        case "1600_yards":
-            txt = "Not implemented yet";
-            break;
+
+    if(!STOP_TIMER){ //yes, it's a double-negative; no IDGAF
+        times = add_new_lap(timer_table, times);
+        next_lap = routine_labels.next();
+        txt = next_lap.value[0];
+        color = next_lap.value[1];
+        cnt.innerHTML = txt;
+        document.body.style.background = color;
+        STOP_TIMER = next_lap.done;
     }
-    //window.alert(txt);
-    cnt.innerHTML = txt;
-    document.body.style.background = color;
 }
 
 function lap_color(lap, stroke){
@@ -89,27 +47,26 @@ function lap_color(lap, stroke){
     return color;
 }
 
-function add_new_time(timer_table, times){
-    
-    var row = timer_table.insertRow(1);
-    var lap_label = row.insertCell();
-    var formatted_time = row.insertCell();
+function add_new_lap(timer_table, times){
+    var row = timer_table.insertRow(1); //insert a new row after the main lap counter row
+    var lap_label = row.insertCell(); //left cell tells you what the set/lap was
+    var formatted_time = row.insertCell(); //right cell lists the time taken for that lap
 
     times.push(Number(Date.now()));
     //console.log("times: " + times);
     
     if(times.length < 2){
         formatted_time.innerHTML = 0;
-        //window.alert("begin timer");
     }else{
         var curr = times[times.length-1];
         var prev = times[times.length-2];
-        //window.alert(prev);
         var diff = curr - prev;
         lap_label.innerHTML = document.getElementById("counter").innerHTML;
         formatted_time.innerHTML = format_time(diff);
     }
-    formatted_time.style = "text-align:center";
+    row.style.backgroundColor = document.body.style.backgroundColor;
+    lap_label.style = "text-align:right";
+    formatted_time.style = "text-align:left";
     return times;
 }
 
@@ -127,63 +84,96 @@ function format_time(diff){
     return time;
 }
 
-function routine_change(workout, times){
+function routine_change(workout){
     var routine = document.getElementById("routine").value;
-    var cnt = document.getElementById("counter");
-    var start_val;
-    
-    switch(routine){
-        case "none":
-            start_val = "Please select a routine";
-            break;
-        case "1600yards":
-            start_val = "WU: 1";
-            break;
-        case "old1k":
-            start_val = "1-0 Free";
-            break;
-    }
+    document.body.style.backgroundColor = STROKE_COLOR_DONE;
     times = [];
-    cnt.innerHTML = start_val;
-    workout.file = routine + ".json";
-    loadJSON(function(response){
-		var jresponse = JSON.parse(response);
-		//console.log(jresponse);
-		//console.log(jresponse["workout"]);
-		workout.cooldown = jresponse["cooldown"];
-		workout.warmup = jresponse["warmup"];
-		workout.workout = jresponse["workout"];
-		//workout.push(JSON.parse(response))
-		//return JSON.parse(response);
-		//workout = jresponse;
-	}, workout.file);
-    //console.log("routine change");
-    //var timer_table = document.getElementById("timer");
-    //timer_table.outerHTML = "<table width=100% border=1 id='timer' onclick='tapUpdate(times)'><tr><td id='counter' style='font-size:200px; text-align:center' colspan=2>Please select a routine</td></tr><tr><td id='padding' height='300px' colspan=2>&nbsp;</td></tr></table>";
+    STOP_TIMER = false;
+    //resets the lap table 
+    timer_table.outerHTML = reset_table;
+    var cnt = document.getElementById("counter");
+    if (routine != "none"){
+        routine_labels = make_routine_generator(routines[routine]);
+        cnt.innerHTML = routine_labels.next().value[0];
+    }
 }
 
-function loadJSON(callback, file_name) {   
-    var xobj = new XMLHttpRequest();
-        xobj.overrideMimeType("application/json");
-    //var a = {};
-    xobj.open('GET', file_name, true); // Replace 'my_data' with the path to your file
-    xobj.onreadystatechange = function () {
-        if (xobj.readyState == 4 && xobj.status == "200") {
-            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
-            callback(xobj.responseText);
-            //workout = xobj.responseText;
+function* make_routine_generator(workout){
+    //creates a generator that iterates through a routine
+    let label = "Tap to start" + workout.title;
+    let stroke = "";
+    let set_count = 0;
+    // let lap = 1;
+    yield [label, STROKE_COLOR_DONE];
+    if(workout["warmup"] != null){
+        for(i = 0; i < workout["warmup"].length; i++){ //loop through the top-level elements of the routine
+            set = workout["warmup"][i]; //grab current set
+            for(rep = 0; rep < set[0]; rep++){ //do the set for {rep} repetitions
+                set_count++;
+                for(lap = 0; lap < set[1].length; lap++){ //loop through the specific laps in the set
+                    stroke = stroke_lookup(set[1][lap])
+                    label = "WU: " + set_count + "-" + (lap+1) + " " + stroke;
+                    yield [label, lap_color(lap+1, stroke)];
+                }
+            }
         }
-    };
-    xobj.send(null);  
-    //return a;
+        yield ["Rest!", STROKE_COLOR_DONE];
+    }
+    console.log("end warmup");
+    
+    set_count = 0;
+    if(workout["workout"] != null){
+        for(i = 0; i < workout["workout"].length; i++){ //loop through the top-level elements of the routine
+            set = workout["workout"][i]; //grab current set
+            for(rep = 0; rep < set[0]; rep++){ //do the set for {rep} repetitions
+                set_count++;
+                for(lap = 0; lap < set[1].length; lap++){ //loop through the specific laps in the set
+                    stroke = stroke_lookup(set[1][lap])
+                    label = set_count + "-" + (lap+1) + " " + stroke;
+                    yield [label, lap_color(lap+1, stroke)];
+                }
+            }
+        }
+    }
+    console.log("end workout");
+    set_count = 0;
+    if(workout["cooldown"] != null){
+        yield ["Rest!", STROKE_COLOR_DONE];
+        for(i = 0; i < workout["cooldown"].length; i++){ //loop through the top-level elements of the routine
+            set = workout["cooldown"][i]; //grab current set
+            for(rep = 0; rep < set[0]; rep++){ //do the set for {rep} repetitions
+                set_count++;
+                for(lap = 0; lap < set[1].length; lap++){ //loop through the specific laps in the set
+                    stroke = stroke_lookup(set[1][lap])
+                    label = "CD: " + set_count + "-" + (lap+1) + " " + stroke;
+                    yield [label, lap_color(lap+1, stroke)];
+                }
+            }
+        }
+    }
+    console.log("Done!");
+    return ["Done! " + format_time(times[times.length-1] - times[0]), STROKE_COLOR_DONE];
 }
 
 function setup(){
     var routine = document.getElementById("routine");
     routine.value = "none";
+    
 }
 
 function stroke_lookup(stroke_id){
     var STROKE_LIST = ["Rest", "Free", "Breast", "Back", "Fly", "Side"];
-    return STROKE_LIST[stroke_id];
+    if (stroke_id == -1){
+        do {
+            stroke = rand_choice(STROKE_LIST);
+        }while (!stroke)
+        return STROKE_LIST[stroke];
+    }else{
+        return STROKE_LIST[stroke_id];
+    }
+}
+
+function rand_choice(arr){
+    let choice = Math.floor(Math.random() * arr.length);
+    return arr[choice];
 }
