@@ -125,7 +125,7 @@ function* make_routine_generator(workout){
     if(workout["workout"] != null){
         for(i = 0; i < workout["workout"].length; i++){ //loop through the top-level elements of the routine
             set = workout["workout"][i]; //grab current set
-            for(rep = 0; rep < set[0]; rep++){ //do the set for {rep} repetitions
+            for(rep = 0; rep < set[0]; rep++){ //do the set for set[0] repetitions
                 set_count++;
                 for(lap = 0; lap < set[1].length; lap++){ //loop through the specific laps in the set
                     stroke = stroke_lookup(set[1][lap])
