@@ -13,7 +13,7 @@ function tapUpdate(times){
         color = next_lap.value[1];
         cnt.innerHTML = txt;
         document.body.style.background = color;
-        STOP_TIMER = next_lap.done;
+        STOP_TIMER = next_lap.done; //generators return a .done property that is true when the last value has been returned
     }
 }
 
@@ -86,9 +86,13 @@ function format_time(diff){
 
 function routine_change(workout){
     var routine = document.getElementById("routine").value;
+
     document.body.style.backgroundColor = STROKE_COLOR_DONE;
     times = [];
     STOP_TIMER = false;
+    //copy+paste of table defined in swim.html
+    var reset_table = '<table width=100% border=1 id="timer" onmousedown="tapUpdate(times)"><tr><td id="counter" style="font-size:150px; text-align:center" colspan=2>Please select a routine</td></tr><tr><td id="padding" height="300px" colspan=2>&nbsp;</td></tr></table>';
+    var timer_table = document.getElementById("timer");
     //resets the lap table 
     timer_table.outerHTML = reset_table;
     var cnt = document.getElementById("counter");
@@ -100,11 +104,12 @@ function routine_change(workout){
 
 function* make_routine_generator(workout){
     //creates a generator that iterates through a routine
-    let label = "Tap to start" + workout.title;
+    let label = "Tap to start " + workout.title;
     let stroke = "";
     let set_count = 0;
     // let lap = 1;
     yield [label, STROKE_COLOR_DONE];
+    // loop through the warmup
     if(workout["warmup"] != null){
         for(i = 0; i < workout["warmup"].length; i++){ //loop through the top-level elements of the routine
             set = workout["warmup"][i]; //grab current set
@@ -121,6 +126,7 @@ function* make_routine_generator(workout){
     }
     console.log("end warmup");
     
+    //loop through the routine per se
     set_count = 0;
     if(workout["workout"] != null){
         for(i = 0; i < workout["workout"].length; i++){ //loop through the top-level elements of the routine
@@ -136,6 +142,7 @@ function* make_routine_generator(workout){
         }
     }
     console.log("end workout");
+    //loop through the cool-down
     set_count = 0;
     if(workout["cooldown"] != null){
         yield ["Rest!", STROKE_COLOR_DONE];
