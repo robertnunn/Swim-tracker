@@ -103,7 +103,7 @@ function routine_change(workout){
 }
 
 function* make_routine_generator(workout){
-    //creates a generator that iterates through a routine
+    //creates a generator that iterates through a routine (the * makes it a generator)
     let label = "Tap to start " + workout.title;
     let stroke = "";
     let set_count = 0;
